@@ -1,0 +1,44 @@
+#!/bin/sh
+
+# Resize videos under a directory.
+# Command "realpath" is used in this tool. Please install it
+# first if you don't have it installed.
+
+indir=	# input dir
+outdir=	# output dir
+ratio=	# expected video width
+
+while getopts i:o:r: c
+do
+	case ${c} in 
+	i) indir=${OPTARG};;
+	o) outdir=${OPTARG};;
+	r) ratio=${OPTARG};;
+	?) # Unknown option
+		echo "resize_videos -i <in_dir> -o <out_dir> -r <ratio_of_scaled_size>"
+		exit;;
+	esac
+done
+
+if [[ "$outdir" = /* ]]
+then
+	# absolute path, do nothing
+	outdir=$outdir
+else
+	outdir=$(pwd)/$outdir
+fi
+#outdir=$(realpath $outdir)
+
+cd $indir
+for dir in $(ls -d */)
+do
+	echo "Processing directory $dir ..."
+	mkdir -p $outdir/$dir
+
+	for v in $(ls $dir/*.avi)
+	do
+		ffmpeg -i $v -vf scale=iw*$ratio:ih*$ratio $outdir/$v >/dev/null 2>&1
+	done
+done
+
+echo "Done!"
